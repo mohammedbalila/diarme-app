@@ -1,3 +1,4 @@
+import 'package:sentry/sentry.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path/path.dart';
@@ -6,7 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../keys.dart';
 
-void handleError(e) {
+Future handleError(e) async {
+  await Sentry.captureException(e);
   if (e.toString().contains("SocketException")) {
     Fluttertoast.showToast(msg: "Make sure you're connected to the internet");
   } else {
@@ -30,7 +32,6 @@ Future<List<Note>> getNotes({bool isStarred = false}) async {
 
     return compute(parseNotes, response.data);
   } catch (e) {
-    debugPrint("ERR " + e.toString());
     handleError(e);
     return [];
   }
@@ -44,8 +45,7 @@ Future<List> getLocalNotes() async {
     await db.close();
     return notes;
   } catch (e) {
-    debugPrint("ERR " + e.toString());
-    handleError(e);
+    await handleError(e);
     return [];
   }
 }
@@ -72,7 +72,7 @@ Future<Note?> getNote({required String noteId}) async {
       return note;
     }
   } catch (e) {
-    handleError(e);
+    await handleError(e);
     return null;
   }
 }
@@ -90,7 +90,7 @@ Future createNote({required Map note}) async {
     print(response.data.toString());
     return response.data;
   } catch (e) {
-    handleError(e);
+    await handleError(e);
     return null;
   }
 }
@@ -102,7 +102,7 @@ void updateLocalNote({required Map<String, dynamic> note}) async {
     await db.update(note);
     await db.close();
   } catch (e) {
-    handleError(e);
+    await handleError(e);
   }
 }
 
@@ -125,7 +125,7 @@ Future updateNote({required Map<String, dynamic> note}) async {
         ));
     return response.data;
   } catch (e) {
-    handleError(e);
+    await handleError(e);
     return null;
   }
 }
@@ -151,7 +151,7 @@ Future deleteNote(String id) async {
       await db.close();
     }
   } catch (e) {
-    handleError(e);
+    await handleError(e);
     return null;
   }
 }

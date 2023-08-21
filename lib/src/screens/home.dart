@@ -124,7 +124,6 @@ class _HomeDrawerState extends State<HomeDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      // backgroundColor: Theme.of(context).colorScheme.s,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [

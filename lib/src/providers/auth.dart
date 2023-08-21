@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:sentry/sentry.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../keys.dart';
@@ -16,11 +16,11 @@ class AuthenticationProvider {
         "user": response.data['user']
       };
     } on DioException catch (e) {
-      debugPrint(e.toString());
+      await Sentry.captureException(e, stackTrace: e.stackTrace);
       if (e.response?.statusCode == 400) {
         return {"success": false, "error": "Invalid email or password"};
       }
-      return {"success": false};
+      return {"success": false, "error": "Something went wrong"};
     }
   }
 
@@ -37,14 +37,13 @@ class AuthenticationProvider {
       Response response = await Dio().post('${Keys.BASE_URL}/users/signup',
           data: {"username": username, "email": email, "password": password},
           options: Options(responseType: ResponseType.json));
-      debugPrint(response.data.toString());
       return {
         "success": true,
         "token": response.data['token'],
         "user": response.data['user']
       };
     } on DioException catch (e) {
-      debugPrint(e.response?.data.toString());
+      await Sentry.captureException(e, stackTrace: e.stackTrace);
       if (e.response?.statusCode == 400) {
         return {
           "success": false,
@@ -64,10 +63,9 @@ class AuthenticationProvider {
           options: Options(
               headers: {"Authorization": "Bearer $userToken"},
               responseType: ResponseType.json));
-      debugPrint(response.data.toString());
       return {"success": true, "user": response.data['user']};
     } on DioException catch (e) {
-      debugPrint(e.response?.data.toString());
+      await Sentry.captureException(e, stackTrace: e.stackTrace);
       if (e.response?.statusCode == 400) {
         return {
           "success": false,
