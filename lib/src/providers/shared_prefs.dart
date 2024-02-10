@@ -6,30 +6,32 @@ class SharedPrefsProvider with ChangeNotifier {
   late String _userToken;
   late String _userId;
   bool _isDarkMode = false;
-  bool _saveToWeb = true;
   bool _hasUnSavedChanges = false;
+  bool _shouldFlushCache = false;
+  bool _hasUnSyncedLocalUpdates = false;
 
   bool get isDarkMode => _isDarkMode;
-  bool get saveToWeb => _saveToWeb;
   bool get hasUnSavedChanges => _hasUnSavedChanges;
   bool get loggedId => _userToken != "";
   bool get firstRun => _firstRun;
   String get userId => _userId;
   String get userToken => _userToken;
+  bool get shouldFlushCache => _shouldFlushCache;
+  bool get hasUnSyncedLocalUpdates => _hasUnSyncedLocalUpdates;
 
   Future<Map<String, bool>> loadPrefs(BuildContext context) async {
     await _checkFirstRun();
     await _checkSignedIn();
     await _checkDarkMode();
-    await _checkDefaultStorage();
     await _checkUnsavedChanges();
 
     Map<String, bool> temp = {
       "firstRun": firstRun,
       "loggedId": loggedId,
       "isDarkMode": isDarkMode,
-      "saveToWeb": saveToWeb,
       "hasUnSavedChanges": hasUnSavedChanges,
+      "shouldFlushCache": shouldFlushCache,
+      "hasUnSyncedLocalUpdates": hasUnSyncedLocalUpdates,
     };
     return temp;
   }
@@ -42,18 +44,26 @@ class SharedPrefsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  set saveToWeb(bool val) {
-    _saveToWeb = val;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('saveToWeb', val);
-    });
-    notifyListeners();
-  }
-
   set hasUnSavedChanges(bool val) {
     _hasUnSavedChanges = val;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('hasUnSavedChanges', val);
+    });
+    notifyListeners();
+  }
+
+  set shouldFlushCache(bool val) {
+    _shouldFlushCache = val;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('shouldFlushCache', val);
+    });
+    notifyListeners();
+  }
+
+  set hasUnSyncedLocalUpdates(bool val) {
+    _hasUnSyncedLocalUpdates = val;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('hasUnSyncedLocalUpdates', val);
     });
     notifyListeners();
   }
@@ -100,12 +110,6 @@ class SharedPrefsProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final savedMode = prefs.getBool('isDarkMode') ?? false;
     _isDarkMode = savedMode;
-  }
-
-  Future _checkDefaultStorage() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final saveToWeb = prefs.getBool('saveToWeb') ?? true;
-    _saveToWeb = saveToWeb;
   }
 
   Future _checkUnsavedChanges() async {

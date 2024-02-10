@@ -39,16 +39,6 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
               ),
-              Card(
-                child: SwitchListTile(
-                  title: const Text('Set web as your default storage'),
-                  activeColor: Theme.of(context).colorScheme.secondaryContainer,
-                  value: provider.saveToWeb,
-                  onChanged: (bool value) {
-                    provider.saveToWeb = value;
-                  },
-                ),
-              ),
               SizedBox(height: 20),
               Card(
                 child: ListTile(

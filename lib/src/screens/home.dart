@@ -71,28 +71,13 @@ class _HomePageState extends State<HomeScreen> {
 
   Future<void> fetchNotes(String type) async {
     toggleLoadingState();
-    if (type == 'local') {
-      List notes = await getLocalNotes();
-      setState(() {
-        title = 'Local';
-        notes = notes;
-      });
-    } else {
-      bool isFavorite = type == 'favorite' ? true : false;
-      List<Note> _notes = await getNotes(isStarred: isFavorite);
-      setState(() {
-        title = isFavorite ? 'Favorite' : 'Home';
-        notes = _notes;
-      });
-    }
+    bool isFavorite = type == 'favorite' ? true : false;
+    List<Note> _notes = await getNotes(isStarred: isFavorite);
+    setState(() {
+      title = isFavorite ? 'Favorite' : 'Home';
+      notes = _notes;
+    });
     toggleLoadingState();
-  }
-
-  Future<List<Note>> getLocalNotes() async {
-    var db = NotesDBProvider();
-    await db.open();
-    List<Note> notes = await db.getNotes();
-    return notes;
   }
 }
 
@@ -175,14 +160,6 @@ class _HomeDrawerState extends State<HomeDrawer> {
           ),
           ListTile(
             leading: Icon(
-              Icons.phonelink_lock,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            title: const Text('Local notes'),
-            onTap: () => getLocalNotes(context),
-          ),
-          ListTile(
-            leading: Icon(
               Icons.settings,
               color: Theme.of(context).colorScheme.secondary,
             ),
@@ -199,10 +176,6 @@ class _HomeDrawerState extends State<HomeDrawer> {
 
   void getFavoriteNotes(context) {
     Navigator.pushReplacementNamed(context, "home/favorite");
-  }
-
-  void getLocalNotes(context) {
-    Navigator.pushReplacementNamed(context, "home/local");
   }
 
   void goHome(context) {

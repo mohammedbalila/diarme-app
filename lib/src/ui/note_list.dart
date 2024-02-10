@@ -114,7 +114,7 @@ class _NoteListState extends State<NoteList> {
             TextButton(
               child: Text(
                 'Yes',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).primaryColor),
               ),
               style: ButtonStyle(
                 backgroundColor: MaterialStatePropertyAll<Color>(

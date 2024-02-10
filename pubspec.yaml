@@ -44,6 +44,7 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   liquid_pull_to_refresh: ^3.0.1
   empty_widget: ^0.0.5
+  internet_connection_checker: ^1.0.0+1
 
 dev_dependencies:
   flutter_test:
