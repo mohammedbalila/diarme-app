@@ -1,16 +1,14 @@
 # diarme
 
-A new Flutter project.
+An application to take notes. My main motivation to make this is to unify where my notes are. I use Android and every Android provider has their own notes app (Samsung notes, Huawei notes, etc...).
+So every time I switch my phone I either lose my notes or have to go through a very manual process to move them, also all of these providers don't have a web interface.
+With all that in mind I created this app. I'm planning to create another web version using Next.JS since Flutter web is still not ready
 
-## Getting Started
+# Features:
+    - Cross platform (web, mobile, desktop)
+    - One account for all your notes across all devices
+    - View & edit your notes offline & online
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Contributions:
+    All PRs are welcome, I'm not a Flutter or mobile dev so I probably made a lot of mistakes
+    in this app. I'm planning a refactor when I have time.
