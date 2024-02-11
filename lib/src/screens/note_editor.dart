@@ -235,10 +235,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
       bool isAdd = note['id'] == "add";
       if (isAdd) {
-        await createNote(note: note, servedFromCache: servedFromCache);
+        await createNote(note: note);
         return true;
       } else {
-        await updateNote(note: note, servedFromCache: servedFromCache);
+        await updateNote(note: note);
         return true;
       }
     } catch (e) {

@@ -41,16 +41,18 @@ Future<List<Note>> getNotes({bool isStarred = false}) async {
   } else {
     notes = await db.getCachedNotes();
   }
-
   await db.close();
   return notes;
 }
 
 Future<void> syncLocalUpdates(LocalCacheProvider db) async {
   List<Map<String, dynamic>> notes = await db.getUnSyncedNotes();
-  List<Future> updates = notes
-      .map((note) => updateNote(note: note, shouldFlushCache: false))
-      .toList();
+  List<Future> updates = notes.map((note) {
+    if (note["id"] == "add") {
+      return createNote(note: note, shouldFlushCache: false);
+    }
+    return updateNote(note: note, shouldFlushCache: false);
+  }).toList();
 
   if (updates.isEmpty) {
     return;
@@ -130,11 +132,12 @@ Future<Note?> getRemoteNote({required String noteId}) async {
   }
 }
 
-Future<bool> createCachedNote(
-    {required Map<String, dynamic> note,
-    required LocalCacheProvider db}) async {
+Future<bool> createCachedNote({required Map<String, dynamic> note}) async {
   try {
+    var db = LocalCacheProvider();
+    await db.open();
     await db.addNoteToCache(note);
+    await db.close();
   } catch (ex) {
     return false;
   }
@@ -142,14 +145,14 @@ Future<bool> createCachedNote(
 }
 
 Future createNote(
-    {required Map<String, dynamic> note, bool servedFromCache = false}) async {
+    {required Map<String, dynamic> note, bool shouldFlushCache = true}) async {
   try {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (servedFromCache) {
-      var db = LocalCacheProvider();
-      await createCachedNote(note: note, db: db);
-      await db.close();
-      prefs.setBool("hasUnSyncedLocalUpdates", true);
+
+    bool connected = await InternetConnectionChecker().hasConnection;
+    if (!connected) {
+      await createCachedNote(note: note);
+      await prefs.setBool("hasUnSyncedLocalUpdates", true);
       return;
     }
 
@@ -160,7 +163,7 @@ Future createNote(
           responseType: ResponseType.json,
           headers: {"Authorization": "Bearer " + token},
         ));
-    prefs.setBool("shouldFlushCache", true);
+    prefs.setBool("shouldFlushCache", shouldFlushCache);
     return response.data;
   } catch (e) {
     await handleError(e);
@@ -181,12 +184,12 @@ Future<bool> updateCachedNote({required Map<String, dynamic> note}) async {
 }
 
 Future updateNote(
-    {required Map<String, dynamic> note,
-    bool servedFromCache = false,
-    bool shouldFlushCache = true}) async {
+    {required Map<String, dynamic> note, bool shouldFlushCache = true}) async {
   try {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (servedFromCache) {
+
+    bool connected = await InternetConnectionChecker().hasConnection;
+    if (!connected) {
       await updateCachedNote(note: note);
       prefs.setBool("hasUnSyncedLocalUpdates", true);
       return;

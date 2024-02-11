@@ -1,4 +1,5 @@
 import 'package:diarme/src/models/note.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -12,7 +13,7 @@ class LocalCacheProvider {
     final path = join(await getDatabasesPath(), 'online.diarme.db');
     db = await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onOpen: (db) => {
         db.execute('''
                 create table if not exists $tableNotesCache (
@@ -20,18 +21,27 @@ class LocalCacheProvider {
                 note_id text,
                 title text,
                 body text,
-                date date,
+                created_at datetime default current_timestamp,
                 is_starred tinyint,
                 requires_sync tinyint default 0
               )
               ''')
       },
-      onUpgrade: (db, oldV, newV) => {
-        if (oldV < newV)
-          {
-            db.execute(
-                "alter table $tableNotesCache add column requires_sync tinyint default 0;")
+      onUpgrade: (db, oldV, newV) async {
+        if (oldV < newV) {
+          try {
+            await db.execute(
+                "alter table $tableNotesCache add column requires_sync tinyint default 0;");
+          } catch (ex) {
+            debugPrint("Column is there");
           }
+          try {
+            await db.execute(
+                "alter table $tableNotesCache add column created_at datetime default current_timestamp;");
+          } catch (ex) {
+            debugPrint("Column is there");
+          }
+        }
       },
     );
   }
@@ -46,7 +56,7 @@ class LocalCacheProvider {
               "note_id": note.id,
               "title": note.title,
               "body": note.body,
-              "date": note.date,
+              "created_at": note.date,
               "is_starred": note.isStarred ? 1 : 0, // no boolean only tiny int
             })
         .toList();
@@ -69,18 +79,29 @@ class LocalCacheProvider {
   }
 
   Future<List<Note>> getCachedNotes() async {
-    List<Map> notes = await db.query(tableNotesCache);
+    try {
+      List<Map> notes = await db.query(tableNotesCache);
 
-    return notes.map((note) {
-      bool isStarred = note['is_starred'] == 0 ? false : true;
-      var n = Note(
-          id: note['note_id'],
-          title: note['title'],
-          body: note['body'],
-          date: note['date'],
-          isStarred: isStarred);
-      return n;
-    }).toList();
+      return notes.map((note) {
+        bool isStarred = note['is_starred'] == 0 ? false : true;
+        final DateFormat formatter = DateFormat.yMMMEd();
+        var parsedDate;
+        try {
+          parsedDate = formatter.format(DateTime.parse(note['created_at']));
+        } catch (ex) {
+          parsedDate = note['created_at'];
+        }
+        var n = Note(
+            id: note['note_id'],
+            title: note['title'],
+            body: note['body'],
+            date: parsedDate,
+            isStarred: isStarred);
+        return n;
+      }).toList();
+    } catch (ex) {
+      return [];
+    }
   }
 
   Future<Note?> getCachedNote(String noteID) async {
@@ -96,7 +117,7 @@ class LocalCacheProvider {
         id: note['note_id'],
         title: note['title'],
         body: note['body'],
-        date: note['date'],
+        date: note['created_at'],
         isStarred: isStarred);
   }
 
@@ -111,9 +132,11 @@ class LocalCacheProvider {
   }
 
   Future addNoteToCache(Map<String, dynamic> note) async {
+    var now = new DateTime.now();
     note["requires_sync"] = 1;
     note["note_id"] = note["id"];
-    note["is_starred"] = 0;
+    note["is_starred"] = note['isStarred'] ? 1 : 0;
+    note["created_at"] = now.toIso8601String();
     note.remove('isStarred');
     note.remove('id');
     await db.insert(tableNotesCache, note);
@@ -128,7 +151,7 @@ class LocalCacheProvider {
               "id": record['note_id'],
               "title": record['title'],
               "body": record['body'],
-              "date": record['date'],
+              "date": record['created_at'],
               "isStarred": record['is_starred'] == 0 ? false : true,
             })
         .toList();
